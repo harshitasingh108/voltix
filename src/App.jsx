@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import CursorGlow from "./components/common/CursorGlow";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 
@@ -13,6 +13,7 @@ function App() {
   return (
     <BrowserRouter>
 
+      <CursorGlow />
       <Navbar />
 
       <Routes>
