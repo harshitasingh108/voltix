@@ -2,8 +2,9 @@ services:
   - type: web
     name: voltix-ml-api
     env: python
-    buildCommand: pip install -r requirements.txt && cd SmartCharge-ML && python train_and_test_demand_model.py && python check_data.py
-    startCommand: cd SmartCharge-ML && uvicorn api:app --host 0.0.0.0 --port $PORT
+    buildCommand: ([ -d SmartCharge-ML ] && cd SmartCharge-ML || true) && pip install -r requirements.txt && python train_and_test_demand_model.py && python check_data.py
+    startCommand: ([ -d SmartCharge-ML ] && cd SmartCharge-ML || true) && uvicorn api:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
+
