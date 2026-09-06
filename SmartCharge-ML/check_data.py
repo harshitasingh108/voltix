@@ -28,7 +28,7 @@ df["hour"] = df["StartDatetime"].dt.hour
 # ============================================================
 
 station_hour = (
-    df.groupby(["ChargerID", "date", "hour"])
+    df.groupby(["ChargerID", "ChargerCompany", "Location", "ChargerType", "date", "hour"])
       .agg(
           Sessions=("Demand", "count"),
           TotalDemand=("Demand", "sum"),
@@ -94,6 +94,27 @@ station_hour["PreviousDemand"] = (
 )
 
 
+# Recent average demand (rolling average of past observed demand)
+station_hour["RecentAvgDemand"] = (
+    station_hour
+    .groupby("ChargerID")["PreviousDemand"]
+    .rolling(window=3, min_periods=1)
+    .mean()
+    .reset_index(level=0, drop=True)
+)
+
+
+# Same hour average demand (expanding average of past observed demand for same hour)
+station_hour["SameHourAvgDemand"] = (
+    station_hour
+    .groupby(["ChargerID", "hour"])["PreviousDemand"]
+    .expanding()
+    .mean()
+    .reset_index(level=[0, 1], drop=True)
+    .sort_index()
+)
+
+
 # Previous observed datetime
 station_hour["PreviousDatetime"] = (
     station_hour
@@ -122,7 +143,9 @@ model_data = station_hour.dropna(
     subset=[
         "PreviousSessions",
         "PreviousDemand",
-        "HoursSincePrevious"
+        "HoursSincePrevious",
+        "RecentAvgDemand",
+        "SameHourAvgDemand"
     ]
 ).copy()
 
@@ -133,19 +156,23 @@ model_data = station_hour.dropna(
 
 features = [
     "ChargerID",
+    "ChargerType",
+    "ChargerCompany",
     "hour",
     "day_of_week",
     "month",
-    "PreviousSessions",
     "PreviousDemand",
-    "HoursSincePrevious"
+    "PreviousSessions",
+    "HoursSincePrevious",
+    "RecentAvgDemand",
+    "SameHourAvgDemand"
 ]
 
 
 X = model_data[features]
 
 # Target
-y = model_data["Sessions"]
+y = model_data["TotalDemand"]
 
 
 # ============================================================
@@ -158,7 +185,7 @@ model_data = model_data.sort_values(
 ).reset_index(drop=True)
 
 X = model_data[features]
-y = model_data["Sessions"]
+y = model_data["TotalDemand"]
 
 split_index = int(len(model_data) * 0.8)
 
@@ -302,7 +329,7 @@ results = model_data.iloc[
     split_index:
 ].copy()
 
-results["PredictedSessions"] = predictions
+results["PredictedDemand"] = predictions
 
 print("\n============================================================")
 print("SAMPLE PREDICTIONS")
@@ -315,11 +342,13 @@ print(
             "datetime",
             "hour",
             "day_of_week",
-            "Sessions",
+            "TotalDemand",
             "PreviousSessions",
             "PreviousDemand",
             "HoursSincePrevious",
-            "PredictedSessions"
+            "RecentAvgDemand",
+            "SameHourAvgDemand",
+            "PredictedDemand"
         ]
     ].head(20).to_string(index=False)
 )

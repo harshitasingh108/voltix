@@ -37,42 +37,20 @@ const destinationIcon = createCustomIcon("🎯", "#dc2626");
 const stationIcon = createCustomIcon("🔌", "#0891b2");
 
 /* =====================================================
-   HAVERSINE DISTANCE
+   HAVERSINE DISTANCE (in km)
 ===================================================== */
 
-const calculateDistance = (
-    lat1,
-    lon1,
-    lat2,
-    lon2
-) => {
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
-
-    const dLat =
-        ((lat2 - lat1) * Math.PI) / 180;
-
-    const dLon =
-        ((lon2 - lon1) * Math.PI) / 180;
-
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
-        Math.sin(dLat / 2) *
-        Math.sin(dLat / 2) +
-        Math.cos(
-            (lat1 * Math.PI) / 180
-        ) *
-        Math.cos(
-            (lat2 * Math.PI) / 180
-        ) *
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
-
-    const c =
-        2 *
-        Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1 - a)
-        );
-
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 };
 
@@ -84,14 +62,12 @@ const SmartCharge = () => {
     /* -------------------------------------------------
        LOCATION
     ------------------------------------------------- */
-
     const [location, setLocation] = useState(null);
     const [locationLoading, setLocationLoading] = useState(false);
 
     /* -------------------------------------------------
        DESTINATION
     ------------------------------------------------- */
-
     const [destination, setDestination] = useState("");
     const [destinationLocation, setDestinationLocation] = useState(null);
     const [destinationLoading, setDestinationLoading] = useState(false);
@@ -99,27 +75,23 @@ const SmartCharge = () => {
     /* -------------------------------------------------
        BATTERY
     ------------------------------------------------- */
-
     const [battery, setBattery] = useState("");
 
     /* -------------------------------------------------
        ROUTE
     ------------------------------------------------- */
-
     const [route, setRoute] = useState(null);
     const [routeLoading, setRouteLoading] = useState(false);
 
     /* -------------------------------------------------
        STATIONS
     ------------------------------------------------- */
-
     const [stations, setStations] = useState([]);
     const [stationsLoading, setStationsLoading] = useState(false);
 
     /* -------------------------------------------------
        MAP REFS
     ------------------------------------------------- */
-
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null);
     const layerGroupRef = useRef(null);
@@ -127,7 +99,6 @@ const SmartCharge = () => {
     /* =================================================
        LEAFLET ROUTE COORDINATES
     ================================================= */
-
     const routeCoordinates = useMemo(() => {
         return (
             route?.geometry?.coordinates?.map(
@@ -136,29 +107,17 @@ const SmartCharge = () => {
         );
     }, [route]);
 
-    console.log("SMARTCHARGE RENDER", {
-        route,
-        location,
-        destinationLocation,
-        routeCoordinatesLength: routeCoordinates.length,
-        stationsCount: stations.length
-    });
-
     /* =================================================
        CURRENT LOCATION
     ================================================= */
-
     const getCurrentLocation = () => {
         setLocationLoading(true);
-
         setLocation(null);
         setRoute(null);
         setStations([]);
 
         if (!navigator.geolocation) {
-            alert(
-                "Geolocation is not supported by your browser."
-            );
+            alert("Geolocation is not supported by your browser.");
             setLocationLoading(false);
             return;
         }
@@ -169,50 +128,24 @@ const SmartCharge = () => {
                 const longitude = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
 
-                console.log(
-                    "Current Location:",
-                    latitude,
-                    longitude
-                );
-
-                console.log(
-                    "Accuracy:",
-                    accuracy,
-                    "meters"
-                );
-
                 setLocation({
                     latitude,
                     longitude,
                     accuracy,
                 });
-
                 setLocationLoading(false);
             },
             (error) => {
-                console.error(
-                    "Location Error:",
-                    error
-                );
-
+                console.error("Location Error:", error);
                 if (error.code === 1) {
-                    alert(
-                        "Location permission denied. Please allow location access."
-                    );
+                    alert("Location permission denied. Please allow location access.");
                 } else if (error.code === 2) {
-                    alert(
-                        "Unable to determine your location."
-                    );
+                    alert("Unable to determine your location.");
                 } else if (error.code === 3) {
-                    alert(
-                        "Location request timed out. Please try again."
-                    );
+                    alert("Location request timed out. Please try again.");
                 } else {
-                    alert(
-                        "Unable to get your location."
-                    );
+                    alert("Unable to get your location.");
                 }
-
                 setLocationLoading(false);
             },
             {
@@ -226,12 +159,9 @@ const SmartCharge = () => {
     /* =================================================
        SEARCH DESTINATION
     ================================================= */
-
     const searchDestination = async () => {
         if (!destination.trim()) {
-            alert(
-                "Please enter a destination."
-            );
+            alert("Please enter a destination.");
             return;
         }
 
@@ -248,17 +178,13 @@ const SmartCharge = () => {
             );
 
             if (!response.ok) {
-                throw new Error(
-                    "Destination search failed"
-                );
+                throw new Error("Destination search failed");
             }
 
             const data = await response.json();
 
             if (!data || data.length === 0) {
-                alert(
-                    "Destination not found. Try another location."
-                );
+                alert("Destination not found. Try another location.");
                 setDestinationLoading(false);
                 return;
             }
@@ -267,19 +193,9 @@ const SmartCharge = () => {
             const latitude = Number(result.lat);
             const longitude = Number(result.lon);
 
-            if (
-                Number.isNaN(latitude) ||
-                Number.isNaN(longitude)
-            ) {
-                throw new Error(
-                    "Invalid destination coordinates"
-                );
+            if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+                throw new Error("Invalid destination coordinates");
             }
-
-            console.log(
-                "Destination:",
-                result
-            );
 
             setDestinationLocation({
                 latitude,
@@ -288,10 +204,7 @@ const SmartCharge = () => {
             });
         } catch (error) {
             console.error(error);
-
-            alert(
-                "Something went wrong while finding the destination."
-            );
+            alert("Something went wrong while finding the destination.");
         }
 
         setDestinationLoading(false);
@@ -300,19 +213,14 @@ const SmartCharge = () => {
     /* =================================================
        GET ROUTE
     ================================================= */
-
     const getRoute = async () => {
         if (!location) {
-            alert(
-                "Please detect your current location first."
-            );
+            alert("Please detect your current location first.");
             return null;
         }
 
         if (!destinationLocation) {
-            alert(
-                "Please search your destination first."
-            );
+            alert("Please search your destination first.");
             return null;
         }
 
@@ -327,44 +235,25 @@ const SmartCharge = () => {
                 `${destinationLocation.longitude},${destinationLocation.latitude}` +
                 `?overview=full&geometries=geojson`;
 
-            console.log(
-                "OSRM URL:",
-                url
-            );
-
             const response = await fetch(url);
 
             if (!response.ok) {
-                throw new Error(
-                    "Route request failed"
-                );
+                throw new Error("Route request failed");
             }
 
             const data = await response.json();
-
-            console.log(
-                "OSRM Response:",
-                data
-            );
 
             if (
                 data.code !== "Ok" ||
                 !data.routes ||
                 data.routes.length === 0
             ) {
-                alert(
-                    "No driving route could be found."
-                );
+                alert("No driving route could be found.");
                 setRouteLoading(false);
                 return null;
             }
 
             const selectedRoute = data.routes[0];
-
-            console.log(
-                "Route Geometry:",
-                selectedRoute.geometry
-            );
 
             const newRoute = {
                 distance: selectedRoute.distance,
@@ -374,15 +263,10 @@ const SmartCharge = () => {
 
             setRoute(newRoute);
             setRouteLoading(false);
-
             return newRoute;
         } catch (error) {
             console.error(error);
-
-            alert(
-                "Something went wrong while finding the route."
-            );
-
+            alert("Something went wrong while finding the route.");
             setRouteLoading(false);
             return null;
         }
@@ -391,12 +275,8 @@ const SmartCharge = () => {
     /* =================================================
        FIND CHARGING STATIONS
     ================================================= */
-
     const findChargingStations = async (routeData) => {
         if (!routeData?.geometry?.coordinates?.length) {
-            console.log(
-                "No route geometry available for stations."
-            );
             return;
         }
 
@@ -438,9 +318,7 @@ const SmartCharge = () => {
             );
 
             if (!response.ok) {
-                throw new Error(
-                    "Charging station request failed"
-                );
+                throw new Error("Charging station request failed");
             }
 
             const data = await response.json();
@@ -487,15 +365,9 @@ const SmartCharge = () => {
                 (a, b) => a.distanceFromUser - b.distanceFromUser
             );
 
-            console.log(
-                "Charging Stations:",
-                uniqueStations
-            );
-
             setStations(uniqueStations);
         } catch (error) {
             console.error("Overpass API Error:", error);
-            // Do not block map rendering if station search fails
         }
 
         setStationsLoading(false);
@@ -504,19 +376,14 @@ const SmartCharge = () => {
     /* =================================================
        FIND SMART CHARGING STATIONS HANDLER
     ================================================= */
-
     const handleFindStations = async () => {
         if (!location) {
-            alert(
-                "Please detect your current location first."
-            );
+            alert("Please detect your current location first.");
             return;
         }
 
         if (!destinationLocation) {
-            alert(
-                "Please search your destination first."
-            );
+            alert("Please search your destination first.");
             return;
         }
 
@@ -525,9 +392,7 @@ const SmartCharge = () => {
             Number(battery) < 0 ||
             Number(battery) > 100
         ) {
-            alert(
-                "Please enter a battery level between 0 and 100."
-            );
+            alert("Please enter a battery level between 0 and 100.");
             return;
         }
 
@@ -541,17 +406,7 @@ const SmartCharge = () => {
     /* =================================================
        LEAFLET MAP EFFECT
     ================================================= */
-
     useEffect(() => {
-        console.log("MAP EFFECT RUNNING", {
-            route,
-            location,
-            destinationLocation,
-            routeCoordinatesLength: routeCoordinates.length,
-            hasContainer: !!mapContainerRef.current,
-            stationsCount: stations.length
-        });
-
         if (!route || !location || !destinationLocation) {
             if (mapRef.current) {
                 try {
@@ -566,20 +421,15 @@ const SmartCharge = () => {
         }
 
         if (!mapContainerRef.current) {
-            console.log("MAP CONTAINER IS NULL");
             return;
         }
 
-        console.log("MAP CONTAINER ELEMENT:", mapContainerRef.current);
-
         try {
             if (!mapRef.current) {
-                // Clear existing _leaflet_id if present to prevent map container already initialized crash
                 if (mapContainerRef.current._leaflet_id) {
                     mapContainerRef.current._leaflet_id = null;
                 }
 
-                console.log("Initializing map...");
                 const map = L.map(mapContainerRef.current, {
                     center: [location.latitude, location.longitude],
                     zoom: 13,
@@ -595,7 +445,6 @@ const SmartCharge = () => {
 
                 mapRef.current = map;
                 layerGroupRef.current = layerGroup;
-                console.log("Map initialized successfully");
             }
 
             const map = mapRef.current;
@@ -645,7 +494,6 @@ const SmartCharge = () => {
                 }
 
                 // 4. Charging Station Markers
-                console.log("Number of stations:", stations.length);
                 stations.forEach((station) => {
                     if (station.latitude && station.longitude) {
                         const distText = typeof station.distanceFromUser === "number"
@@ -699,7 +547,7 @@ const SmartCharge = () => {
                 }, 150);
             }
         } catch (error) {
-            console.error("FATAL MAP ERROR INSIDE EFFECT:", error);
+            console.error("Map effect error:", error);
         }
     }, [route, location, destinationLocation, stations, routeCoordinates]);
 
@@ -721,32 +569,10 @@ const SmartCharge = () => {
     /* =================================================
        RENDER
     ================================================= */
-
     return (
         <main className="min-h-screen bg-slate-50 pt-28">
-
-            {/* VERSION TEST MARKER ON TOP LEFT */}
-            <div
-                style={{
-                    position: "fixed",
-                    top: 100,
-                    left: 10,
-                    zIndex: 99999,
-                    background: "red",
-                    color: "white",
-                    padding: "16px 24px",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
-                }}
-            >
-                SMARTCHARGE COMPONENT VERSION TEST
-            </div>
-
             <section className="mx-auto max-w-7xl px-6 py-16">
                 {/* PAGE HEADER */}
-
                 <div className="mb-10 text-center">
                     <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-500">
                         Smart EV Assistant
@@ -760,18 +586,14 @@ const SmartCharge = () => {
                     </h1>
 
                     <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-500">
-                        Tell us where you're going and
-                        we'll help you find charging
-                        stations that fit your journey.
+                        Tell us where you're going and we'll help you find charging stations that fit your journey.
                     </p>
                 </div>
 
                 {/* MAIN CARD */}
-
                 <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
                     <div className="grid gap-8 lg:grid-cols-3">
                         {/* CURRENT LOCATION */}
-
                         <div>
                             <label className="mb-3 block text-sm font-semibold text-slate-900">
                                 Current Location
@@ -802,18 +624,14 @@ const SmartCharge = () => {
                             {location && (
                                 <div className="mt-3 space-y-1 text-xs text-slate-500">
                                     <p>
-                                        Lat:{" "}
-                                        {location.latitude.toFixed(5)}
+                                        Lat: {location.latitude.toFixed(5)}
                                     </p>
                                     <p>
-                                        Lon:{" "}
-                                        {location.longitude.toFixed(5)}
+                                        Lon: {location.longitude.toFixed(5)}
                                     </p>
                                     {location.accuracy && (
                                         <p>
-                                            Accuracy:{" "}
-                                            {Math.round(location.accuracy)}{" "}
-                                            meters
+                                            Accuracy: {Math.round(location.accuracy)} meters
                                         </p>
                                     )}
                                 </div>
@@ -821,7 +639,6 @@ const SmartCharge = () => {
                         </div>
 
                         {/* DESTINATION */}
-
                         <div>
                             <label className="mb-3 block text-sm font-semibold text-slate-900">
                                 Destination
@@ -831,9 +648,7 @@ const SmartCharge = () => {
                                 <input
                                     type="text"
                                     value={destination}
-                                    onChange={(e) =>
-                                        setDestination(e.target.value)
-                                    }
+                                    onChange={(e) => setDestination(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             searchDestination();
@@ -864,7 +679,6 @@ const SmartCharge = () => {
                         </div>
 
                         {/* BATTERY */}
-
                         <div>
                             <label className="mb-3 block text-sm font-semibold text-slate-900">
                                 Battery Level
@@ -880,9 +694,7 @@ const SmartCharge = () => {
                                     min="0"
                                     max="100"
                                     value={battery}
-                                    onChange={(e) =>
-                                        setBattery(e.target.value)
-                                    }
+                                    onChange={(e) => setBattery(e.target.value)}
                                     placeholder="78"
                                     className="w-full rounded-xl border border-slate-200 bg-white px-10 py-3 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                                 />
@@ -918,7 +730,6 @@ const SmartCharge = () => {
                     </div>
 
                     {/* BUTTON */}
-
                     <div className="mt-10 flex justify-end">
                         <button
                             type="button"
@@ -935,7 +746,6 @@ const SmartCharge = () => {
                     </div>
 
                     {/* ROUTE RESULT */}
-
                     {route && (
                         <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-5">
                             <div className="mb-5 flex items-center justify-between">
@@ -978,31 +788,10 @@ const SmartCharge = () => {
                         </div>
                     )}
 
-                    {/* ROUTE SECTION CONTINUATION MARKER (TEST STEP 7) */}
-                    {route && (
-                        <div
-                            style={{
-                                background: "red",
-                                color: "white",
-                                padding: "30px",
-                                marginTop: "30px",
-                                borderRadius: "16px",
-                                fontWeight: "bold",
-                                fontSize: "20px"
-                            }}
-                        >
-                            ROUTE SECTION CONTINUES HERE - MAP & STATIONS BELOW
-                        </div>
-                    )}
-
-                    {/* =================================================
-                        MAP
-                    ================================================= */}
-
+                    {/* MAP */}
                     {route && location && destinationLocation && (
                         <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
                             {/* MAP HEADER */}
-
                             <div className="border-b border-slate-100 px-5 py-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -1022,7 +811,6 @@ const SmartCharge = () => {
                             </div>
 
                             {/* LEAFLET MAP CONTAINER */}
-
                             <div
                                 ref={mapContainerRef}
                                 style={{
@@ -1036,10 +824,7 @@ const SmartCharge = () => {
                         </div>
                     )}
 
-                    {/* =================================================
-                        CHARGING STATIONS
-                    ================================================= */}
-
+                    {/* CHARGING STATIONS */}
                     {route && (
                         <div className="mt-8">
                             <div className="mb-5 flex items-end justify-between">
