@@ -242,10 +242,10 @@ print("Baseline RMSE:", baseline_rmse)
 # ============================================================
 
 model = RandomForestRegressor(
-    n_estimators=200,
+    n_estimators=40,
     random_state=42,
     n_jobs=-1,
-    max_depth=15
+    max_depth=10
 )
 
 
@@ -266,7 +266,7 @@ print("Training completed!")
 # SAVE AND TEST MODEL
 # ============================================================
 
-joblib.dump(model, "smartcharge_model.pkl")
+joblib.dump(model, "smartcharge_model.pkl", compress=3)
 print("Model saved successfully: smartcharge_model.pkl")
 
 loaded_model = joblib.load("smartcharge_model.pkl")

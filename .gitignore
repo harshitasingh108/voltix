@@ -11,9 +11,6 @@ dist
 dist-ssr
 *.local
 
-# ML Models
-*.pkl
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

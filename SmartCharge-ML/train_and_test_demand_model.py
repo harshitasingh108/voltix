@@ -182,8 +182,8 @@ preprocessor = ColumnTransformer(
 pipeline = Pipeline(steps=[
     ("preprocessor", preprocessor),
     ("regressor", RandomForestRegressor(
-        n_estimators=200,
-        max_depth=15,
+        n_estimators=40,
+        max_depth=10,
         random_state=42,
         n_jobs=-1
     ))
@@ -220,7 +220,7 @@ print(f"Baseline RMSE:     {baseline_rmse:.4f}  -->  RF RMSE:     {rf_rmse:.4f} 
 # 9. SAVE NEW MODEL PIPELINE
 # ============================================================
 model_filename = "smartcharge_demand_model.pkl"
-joblib.dump(pipeline, model_filename)
+joblib.dump(pipeline, model_filename, compress=3)
 print(f"\nSaved new model pipeline to: {model_filename}")
 
 

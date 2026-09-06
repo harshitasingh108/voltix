@@ -2,35 +2,41 @@ import os
 import pandas as pd
 import numpy as np
 
-# Pre-load raw dataset and compute station-hour aggregation by Location & ChargerType
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(BASE_DIR, "data", "ChargingRecords.csv")
-_raw_df = pd.read_csv(csv_path)
 
-_raw_df["StartDatetime"] = pd.to_datetime(_raw_df["StartDatetime"])
-_raw_df["date"] = _raw_df["StartDatetime"].dt.date
-_raw_df["hour"] = _raw_df["StartDatetime"].dt.hour
+_station_hour = None
 
-# Station-hour aggregation
-_station_hour = (
-    _raw_df.groupby(["Location", "ChargerType", "date", "hour"])
-           .agg(
-               Sessions=("Demand", "count"),
-               TotalDemand=("Demand", "sum"),
-               AvgDemand=("Demand", "mean")
-           )
-           .reset_index()
-)
+def _init_station_hour():
+    global _station_hour
+    if _station_hour is not None:
+        return _station_hour
 
-_station_hour["date"] = pd.to_datetime(_station_hour["date"])
-_station_hour["datetime"] = (
-    _station_hour["date"] + pd.to_timedelta(_station_hour["hour"], unit="h")
-)
-_station_hour["hour"] = _station_hour["datetime"].dt.hour
-_station_hour["day_of_week"] = _station_hour["datetime"].dt.dayofweek
-_station_hour["month"] = _station_hour["datetime"].dt.month
+    usecols = ["Location", "ChargerType", "StartDatetime", "Demand"]
+    df = pd.read_csv(csv_path, usecols=usecols)
+    df["StartDatetime"] = pd.to_datetime(df["StartDatetime"])
+    df["date"] = df["StartDatetime"].dt.date
+    df["hour"] = df["StartDatetime"].dt.hour.astype(np.int8)
 
-_station_hour = _station_hour.sort_values(["Location", "ChargerType", "datetime"]).reset_index(drop=True)
+    _station_hour = (
+        df.groupby(["Location", "ChargerType", "date", "hour"], as_index=False)
+          .agg(
+              Sessions=("Demand", "count"),
+              TotalDemand=("Demand", "sum"),
+              AvgDemand=("Demand", "mean")
+          )
+    )
+
+    _station_hour["date"] = pd.to_datetime(_station_hour["date"])
+    _station_hour["datetime"] = (
+        _station_hour["date"] + pd.to_timedelta(_station_hour["hour"], unit="h")
+    )
+    _station_hour["hour"] = _station_hour["datetime"].dt.hour.astype(np.int8)
+    _station_hour["day_of_week"] = _station_hour["datetime"].dt.dayofweek.astype(np.int8)
+    _station_hour["month"] = _station_hour["datetime"].dt.month.astype(np.int8)
+
+    _station_hour = _station_hour.sort_values(["Location", "ChargerType", "datetime"]).reset_index(drop=True)
+    return _station_hour
 
 
 def get_historical_features(location: str, charger_type: int, target_datetime):
@@ -38,15 +44,15 @@ def get_historical_features(location: str, charger_type: int, target_datetime):
     Retrieves leak-free historical demand features for a given Location, ChargerType,
     and target_datetime strictly from past observations before target_datetime.
     """
+    station_hour_df = _init_station_hour()
     target_dt = pd.to_datetime(target_datetime)
     if hasattr(target_dt, "tzinfo") and target_dt.tzinfo is not None:
         target_dt = target_dt.tz_localize(None)
 
-    # Filter strictly for past records before target_dt matching Location and ChargerType
-    past_records = _station_hour[
-        (_station_hour["Location"] == location) &
-        (_station_hour["ChargerType"] == charger_type) &
-        (_station_hour["datetime"] < target_dt)
+    past_records = station_hour_df[
+        (station_hour_df["Location"] == location) &
+        (station_hour_df["ChargerType"] == charger_type) &
+        (station_hour_df["datetime"] < target_dt)
     ].sort_values("datetime")
 
     if past_records.empty:
@@ -55,7 +61,6 @@ def get_historical_features(location: str, charger_type: int, target_datetime):
             "reason": f"No historical records found for Location='{location}' and ChargerType={charger_type} prior to {target_dt}"
         }
 
-    # Latest past record
     latest = past_records.iloc[-1]
 
     previous_demand = float(latest["TotalDemand"])
@@ -63,11 +68,9 @@ def get_historical_features(location: str, charger_type: int, target_datetime):
     previous_datetime = latest["datetime"]
     hours_since_previous = float((target_dt - previous_datetime).total_seconds() / 3600.0)
 
-    # Recent average demand (3-observation rolling mean of TotalDemand from past records)
     recent_records = past_records.tail(3)
     recent_avg_demand = float(recent_records["TotalDemand"].mean())
 
-    # Same hour average demand (mean of TotalDemand for past records matching target hour)
     target_hour = target_dt.hour
     same_hour_past = past_records[past_records["hour"] == target_hour]
 
