@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CursorGlow from "./components/common/CursorGlow";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
-
+import SmartCharge from "./pages/SmartCharge";
 import Home from "./pages/Home";
 import AboutPage from "./pages/AboutPage";
 import Solutions from "./pages/Solutions";
@@ -19,7 +19,7 @@ function App() {
       <Routes>
 
         <Route path="/" element={<Home />} />
-
+        <Route path="/smart-charge" element={<SmartCharge />} />
         <Route path="/about" element={<AboutPage />} />
 
         <Route path="/solutions" element={<Solutions />} />
