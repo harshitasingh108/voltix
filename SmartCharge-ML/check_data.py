@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor
@@ -259,6 +260,20 @@ print("============================================================")
 model.fit(X_train, y_train)
 
 print("Training completed!")
+
+
+# ============================================================
+# SAVE AND TEST MODEL
+# ============================================================
+
+joblib.dump(model, "smartcharge_model.pkl")
+print("Model saved successfully: smartcharge_model.pkl")
+
+loaded_model = joblib.load("smartcharge_model.pkl")
+print("Saved model loaded successfully!")
+
+loaded_predictions = loaded_model.predict(X_test)
+print("Saved model prediction test passed!")
 
 
 # ============================================================
