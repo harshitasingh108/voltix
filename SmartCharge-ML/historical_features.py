@@ -1,8 +1,12 @@
+import os
 import pandas as pd
 import numpy as np
 
 # Pre-load raw dataset and compute station-hour aggregation by Location & ChargerType
-_raw_df = pd.read_csv("data/ChargingRecords.csv")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(BASE_DIR, "data", "ChargingRecords.csv")
+_raw_df = pd.read_csv(csv_path)
+
 _raw_df["StartDatetime"] = pd.to_datetime(_raw_df["StartDatetime"])
 _raw_df["date"] = _raw_df["StartDatetime"].dt.date
 _raw_df["hour"] = _raw_df["StartDatetime"].dt.hour

@@ -1,17 +1,32 @@
+import os
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+# Base directory resolution
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(BASE_DIR, "data", "ChargingRecords.csv")
+model_path = os.path.join(BASE_DIR, "smartcharge_model.pkl")
+demand_model_path = os.path.join(BASE_DIR, "smartcharge_demand_model.pkl")
+
+# Auto-train models if missing on deployment environment
+if not os.path.exists(model_path) or not os.path.exists(demand_model_path):
+    import subprocess
+    print("[VOLTIX ML Backend] Pre-trained model binary missing. Running automatic model training...")
+    subprocess.run(["python", os.path.join(BASE_DIR, "train_and_test_demand_model.py")], cwd=BASE_DIR, check=False)
+    subprocess.run(["python", os.path.join(BASE_DIR, "check_data.py")], cwd=BASE_DIR, check=False)
+
 # ============================================================
 # 1. LOAD PRE-TRAINED MODEL & DATASET HISTORY
 # ============================================================
 
-model = joblib.load("smartcharge_model.pkl")
+model = joblib.load(model_path)
 
 # Pre-load dataset and compute historical features matching check_data.py
-raw_df = pd.read_csv("data/ChargingRecords.csv")
+raw_df = pd.read_csv(csv_path)
+
 raw_df["StartDatetime"] = pd.to_datetime(raw_df["StartDatetime"])
 raw_df["date"] = raw_df["StartDatetime"].dt.date
 raw_df["hour"] = raw_df["StartDatetime"].dt.hour
@@ -218,7 +233,7 @@ def predict(input_data: PredictionInput):
 
 from historical_features import get_historical_features
 
-demand_model = joblib.load("smartcharge_demand_model.pkl")
+demand_model = joblib.load(demand_model_path)
 
 
 class DemandPredictionInput(BaseModel):
