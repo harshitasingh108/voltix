@@ -385,6 +385,41 @@ const SmartCharge = () => {
     /* =================================================
        DEMAND PREDICTION HELPERS
     ================================================= */
+    const ML_LIVE_URL = "https://voltix-rfy8.onrender.com/predict-demand";
+    const ML_LOCAL_URL = "http://127.0.0.1:8000/predict-demand";
+
+    const callPredictDemandApi = async (payload) => {
+        const primaryUrl = import.meta.env.VITE_ML_API_URL
+            ? `${import.meta.env.VITE_ML_API_URL.replace(/\/$/, '')}/predict-demand`
+            : ML_LOCAL_URL;
+
+        try {
+            const response = await fetch(primaryUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) return await response.json();
+        } catch (_) {}
+
+        const fallbackResponse = await fetch(ML_LIVE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!fallbackResponse.ok) {
+            let errorText = "Unable to connect to the SmartCharge AI service.";
+            try {
+                const errData = await fallbackResponse.json();
+                if (errData?.detail) errorText = errData.detail;
+            } catch (_) {}
+            throw new Error(errorText);
+        }
+
+        return await fallbackResponse.json();
+    };
+
     const handlePredictStationDemand = async (station) => {
         if (!station.predictionAvailable) return;
 
@@ -402,22 +437,7 @@ const SmartCharge = () => {
         };
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/predict-demand", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                let errorText = "Unable to connect to the SmartCharge AI service.";
-                try {
-                    const errData = await response.json();
-                    if (errData?.detail) errorText = errData.detail;
-                } catch (_) {}
-                throw new Error(errorText);
-            }
-
-            const data = await response.json();
+            const data = await callPredictDemandApi(payload);
             if (data && typeof data.predictedDemand === "number") {
                 setStationPredictions((prev) => ({
                     ...prev,
@@ -458,22 +478,7 @@ const SmartCharge = () => {
                 target_datetime: currentIsoDatetime
             };
 
-            const response = await fetch("http://127.0.0.1:8000/predict-demand", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                let errorText = "Unable to connect to the SmartCharge AI service.";
-                try {
-                    const errData = await response.json();
-                    if (errData?.detail) errorText = errData.detail;
-                } catch (_) {}
-                throw new Error(errorText);
-            }
-
-            const data = await response.json();
+            const data = await callPredictDemandApi(payload);
             if (data && typeof data.predictedDemand === "number") {
                 return { id: station.id, predictedDemand: data.predictedDemand };
             } else {
