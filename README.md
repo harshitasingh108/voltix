@@ -1,143 +1,72 @@
-# ⚡ VOLTRIX - Smart EV Charging Platform
+# ⚡ VOLTRIX — Smart EV Charging Network Platform
 
-A modern and responsive EV Charging website built using **React**, **Vite**, and **Tailwind CSS**. The project showcases an electric vehicle charging platform with a clean UI, reusable components, and responsive layouts.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://voltix-nine.vercel.app)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.8-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Python ML](https://img.shields.io/badge/Python-scikit--learn-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://scikit-learn.org/)
+[![Leaflet Maps](https://img.shields.io/badge/Leaflet-Maps-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
+
+A modern electric vehicle charging network platform that integrates interactive station discovery, real-time availability tracking, and a **Python Machine Learning module** for charging demand forecasting.
+
+---
 
 ## 🌐 Live Demo
-
-https://voltix-nine.vercel.app
-
-## 📂 GitHub Repository
-
-https://github.com/harshitasingh108/voltix
+🔗 **[https://voltix-nine.vercel.app](https://voltix-nine.vercel.app)**
 
 ---
 
-## 🚀 Features
+## 🚀 Key Features
 
-- Modern and responsive UI
-- Premium landing page
-- About page
-- EV Charging Solutions page
-- SaaS Services page
-- Contact page
-- Glassmorphism navigation bar
-- Reusable React components
-- Responsive layout
-- Smooth page navigation with React Router
+- **📍 Interactive Station Finder:** Dynamic Leaflet map integration displaying nearby EV charging stations with live status indicators.
+- **🤖 SmartCharge ML Insights:** Machine learning feature processing (`SmartCharge-ML/api.py`) trained on historical charging data (`ChargingRecords.csv`) to predict station load and optimal charging times.
+- **⚡ Modern Responsive UI:** Premium dark-accent theme with custom typography (`@fontsource/space-grotesk` & `@fontsource/inter`).
+- **💳 SaaS & Station Services:** Complete portal showcasing charging solutions for home, enterprise fleet management, and public station operators.
 
 ---
 
-## 🛠 Tech Stack
+## 🛠️ Project Architecture
 
-- React
-- Vite
-- Tailwind CSS
-- React Router DOM
-- JavaScript (ES6+)
-- HTML5
-- CSS3
-
----
-
-## 📁 Project Structure
-
-```text
-src/
-│
-├── assets/
-│   ├── images/
-│   └── videos/
-│
-├── components/
-│   ├── common/
-│   ├── layout/
-│   └── sections/
-│
-├── pages/
-│   ├── Home.jsx
-│   ├── AboutPage.jsx
-│   ├── Solutions.jsx
-│   ├── Services.jsx
-│   └── Contact.jsx
-│
-├── App.jsx
-└── main.jsx
+```
+voltix/
+├── src/                      # React Frontend Source Code
+│   ├── components/           # Navbar, Footer, StationCard, MapView
+│   ├── pages/                # Home, Solutions, Analytics, About
+│   └── App.jsx
+├── SmartCharge-ML/           # Python Machine Learning Backend
+│   ├── api.py                # Flask API Endpoint for ML Predictions
+│   ├── historical_features.py# Feature Engineering & Preprocessing
+│   ├── check_data.py         # Data Inspection Utilities
+│   └── data/                 # Charging Records Dataset
+└── package.json
 ```
 
 ---
 
-## 📄 Pages
+## ⚙️ Setup & Installation
 
-- 🏠 Home
-- ℹ️ About
-- ⚡ EV Charging Solutions
-- 💻 SaaS Services
-- 📞 Contact
-
----
-
-## 💻 Installation
-
-Clone the repository
-
+### 1. Frontend Setup
 ```bash
 git clone https://github.com/harshitasingh108/voltix.git
-```
-
-Move into the project
-
-```bash
 cd voltix
-```
-
-Install dependencies
-
-```bash
 npm install
-```
-
-Run locally
-
-```bash
 npm run dev
 ```
 
-Build for production
-
+### 2. Machine Learning API Setup
 ```bash
-npm run build
+cd SmartCharge-ML
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+pip install -r requirements.txt
+python api.py
 ```
 
 ---
 
-## 🎯 Future Improvements
+## 👤 Author
 
-- Animated custom cursor
-- Advanced dropdown navigation
-- Framer Motion animations
-- Dark mode
-- EV Station Finder with Maps
-- Backend integration
-- Authentication
-- Real-time charging station data
-
----
-
-## 📸 Screenshots
-
-_Add screenshots of the Home, About, Solutions, and Contact pages here._
-
----
-
-## 👩‍💻 Developed By
-
-**Harshita Singh**
-
-- GitHub: https://github.com/harshitasingh108
-- LinkedIn: https://www.linkedin.com/in/harshita-singh-284750305/
-
----
-
-## 📜 License
-
-This project is developed for educational and portfolio purposes.
+**Harshita Singh**  
+- GitHub: [@harshitasingh108](https://github.com/harshitasingh108)  
+- Email: harshi786108@gmail.com
